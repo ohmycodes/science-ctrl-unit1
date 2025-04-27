@@ -45,46 +45,57 @@ Quitar el elemento con identificador help-button
 
 Agregar la opción de sonido a la pregunta
 
+## Iteración 5
+
+El texto en español quedará oculto pero será visible cuando el usuario presione un icono de visualización y se debe indicar “ver en español”
+
+El texto en español no estará disponible en la alternativa
+
+El resultado mostrará siempre la opción correcta con su traducción al español y la opción de escuchar el sonido
+
+## Iteración 6
+
+Las alternativas mostrarán el texto en español cuando el mouse pase por encima de la opción
+
 # Pido que me cree un prompt para poder generar juego en Firebase
 
 
-Crea una aplicación web interactiva completa (HTML, Tailwind CSS, JavaScript) que funcione como un juego educativo sobre el cuerpo humano para un niño de 8 años. La aplicación debe incluir:
+Crea una aplicación web interactiva completa en un solo archivo HTML, utilizando Tailwind CSS y Font Awesome desde CDN, y JavaScript puro. La aplicación será un juego educativo sobre el cuerpo humano para niños de 8 años, con las siguientes características:
 
-1.  **Pantallas:**
-    * **Inicio:** Título "¡Aprende sobre tu Cuerpo!", texto introductorio, iconos decorativos (`fas fa-child`, `fas fa-heartbeat`, `fas fa-brain`) y botón "Empezar Juego".
-    * **Juego:** Muestra el progreso (Pregunta X / Y), la puntuación, el contenido de la pregunta actual y las opciones.
-    * **Final:** Mensaje "¡Juego Terminado!", icono de trofeo (`fas fa-trophy`), puntuación final (Puntos / Total) y botón "Jugar de Nuevo".
+1.  **Estructura General:**
+    * **Pantalla de Inicio:** Título "¡Aprende sobre tu Cuerpo!", texto introductorio, iconos decorativos (`fas fa-child`, `fas fa-heartbeat`, `fas fa-brain`) y botón "Empezar Juego".
+    * **Pantalla de Juego:** Muestra el número de pregunta actual sobre el total (ej. "Pregunta 3 / 20"), la puntuación actual, el contenido interactivo de la pregunta y las opciones de respuesta.
+    * **Pantalla Final:** Mensaje "¡Juego Terminado!", icono de trofeo (`fas fa-trophy`), puntuación final (Puntos / Total) y botón "Jugar de Nuevo".
 
 2.  **Contenido Educativo:**
-    * **Temas:** Huesos (Skull, Ribs, Spinal Column), Órganos (Heart, Lungs, Stomach, Brain), Articulaciones, Importancia de la Actividad Física.
-    * **Preguntas:** 5 preguntas de opción múltiple por tema (20 en total). Las preguntas, opciones y términos deben estar en inglés, con su respectiva traducción al español mostrada debajo o junto al texto en inglés.
+    * **Temas:** Huesos (Skull, Ribs, Spinal Column), Órganos (Heart, Lungs, Stomach, Brain), Articulaciones, Actividad Física.
+    * **Preguntas:** 5 preguntas de opción múltiple por tema (20 en total). Utilizar la estructura de datos JSON proporcionada (ver punto 6).
 
-3.  **Funcionalidad del Juego:**
-    * **Visualización Pregunta:**
-        * Mostrar un icono de Font Awesome relevante para el término/tema (usar `fa_icon` del JSON de datos; si es `null`, mostrar el `term` como texto de fallback).
-        * Mostrar el término clave en inglés (grande) y su traducción al español (más pequeña) debajo.
-        * Botón de audio (`fas fa-volume-up`) junto al término para escuchar su pronunciación en inglés (Web Speech API, `en-US`).
-        * Mostrar la pregunta en inglés (semibold) y su traducción al español debajo.
-        * Botón de audio (`fas fa-volume-up`) junto a la pregunta en inglés para escucharla.
-    * **Opciones:** 4 botones de opción múltiple por pregunta, mostrando el texto en inglés (arriba) y la traducción al español (debajo). Las opciones deben barajarse cada vez.
-    * **Respuesta y Feedback:**
+3.  **Funcionalidad Detallada (Pantalla de Juego):**
+    * **Visualización Principal:**
+        * Mostrar un icono de Font Awesome grande (`fa_icon` del JSON; si es `null`, mostrar el `term` como texto).
+        * Mostrar el término clave en inglés (`term`) seguido de un botón de audio (`fas fa-volume-up`) para escuchar su pronunciación (`pronunciation_term`) y un botón de ojo (`fas fa-eye`) para mostrar/ocultar la traducción al español (`term_translation`). La traducción estará oculta por defecto.
+    * **Pregunta:**
+        * Mostrar la pregunta en inglés (`question_en`) seguida de un botón de audio (`fas fa-volume-up`) para escucharla y un botón de ojo (`fas fa-eye`) para mostrar/ocultar la traducción al español (`question_es`). La traducción estará oculta por defecto.
+    * **Opciones de Respuesta:**
+        * Mostrar 4 botones con las opciones en inglés (`option.en`). Las opciones deben barajarse.
+        * Al pasar el mouse (hover) sobre un botón de opción, debe aparecer debajo del texto en inglés la traducción al español (`option.es`) correspondiente a esa opción.
+    * **Feedback:**
         * Al seleccionar una opción, deshabilitar todos los botones.
-        * Marcar la opción seleccionada como correcta (fondo verde claro, borde verde) o incorrecta (fondo rojo claro, borde rojo).
-        * Si es incorrecta, marcar también la opción correcta en verde.
-        * Mostrar texto de feedback ("¡Correcto! 🎉" o "Incorrecto. Era: [Respuesta EN] ([Respuesta ES])").
-        * Mostrar un botón de audio (`fas fa-volume-up`) junto al feedback para escuchar la pronunciación de la *respuesta correcta* en inglés.
-        * Actualizar la puntuación si la respuesta es correcta.
-    * **Navegación:** Botón "Siguiente Pregunta" que aparece después de responder. Al final, el botón lleva a la pantalla final. El botón "Jugar de Nuevo" reinicia el juego barajando las preguntas.
-    * **Sin Ayuda:** No incluir botón de ayuda ni funcionalidad de pista.
+        * Marcar la opción seleccionada como correcta (verde) o incorrecta (rojo).
+        * Mostrar un texto indicando "¡Correcto! 🎉" o "Incorrecto. La respuesta correcta es:".
+        * Debajo de ese texto, mostrar *siempre* la respuesta correcta en inglés (`answer_en`) seguida de su traducción al español entre paréntesis y un botón de audio (`fas fa-volume-up`) para escuchar la pronunciación en inglés de la respuesta correcta.
+    * **Navegación:** Botón "Siguiente Pregunta" que aparece tras responder. El botón "Jugar de Nuevo" reinicia el juego.
+    * **Sin Ayuda:** No incluir ninguna funcionalidad de ayuda o pista.
 
 4.  **Tecnología y Estilo:**
-    * Usar HTML semántico, Tailwind CSS para todo el estilo (diseño limpio, responsivo, bordes redondeados, colores definidos para feedback) y JavaScript para la lógica del juego y la interacción con la Web Speech API.
-    * Cargar Tailwind CSS y Font Awesome desde CDN.
-    * Usar la fuente 'Inter'.
-    * Asegurar transiciones suaves y animaciones de aparición (`fadeIn`).
+    * HTML semántico, Tailwind CSS para todo el estilo (diseño limpio, responsivo, bordes redondeados, colores específicos para feedback: verde `#dcfce7`, rojo `#fee2e2`).
+    * Fuente 'Inter'.
+    * Usar JavaScript para toda la lógica: barajar preguntas/opciones, manejar clics, actualizar UI, controlar visibilidad de traducciones, interactuar con Web Speech API (`speechSynthesis`, `en-US`) para todos los audios.
+    * Incluir animaciones suaves de aparición (`fadeIn`).
 
-5.  **Datos (Incrustar directamente en el script JS):**
-    * Utilizar la siguiente estructura de datos JSON para las preguntas (incluir las 20 preguntas completas de la versión final):
+5.  **Datos (Incrustar en JS):**
+    * Utilizar la siguiente estructura de datos JSON para las preguntas (incluir las 20 preguntas completas):
         ```json
         [
           {
@@ -101,11 +112,11 @@ Crea una aplicación web interactiva completa (HTML, Tailwind CSS, JavaScript) q
               { en: "Digest food", es: "Digerir comida" }
             ],
             answer_en: "Protect the brain",
-            pronunciation_term: "Skull" // Pronunciación del término
+            pronunciation_term: "Skull" // Pronunciación específica del término
           },
-          // ... (resto de las 19 preguntas)
+          // ... (resto de las 19 preguntas con su estructura completa)
         ]
         ```
-    * La pronunciación para el audio de la respuesta correcta se tomará directamente del texto `answer_en`. La pronunciación para el audio de la pregunta se tomará de `question_en`.
+    * El audio de la pregunta usará `question_en`. El audio de la respuesta correcta usará `answer_en`.
 
-Genera el código completo y funcional en un solo archivo HTML.
+Genera el código completo y funcional en un único archivo HTML.
