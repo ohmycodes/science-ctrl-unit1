@@ -10,39 +10,62 @@
         /* Estilos adicionales */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f9ff; /* Azul cielo muy claro */
+            background-color: #f0f9ff;
         }
         .quiz-container {
             background-color: white;
             border-radius: 1rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            overflow: hidden; /* Asegura bordes redondeados consistentes */
+            overflow: hidden;
         }
         #question-icon-container {
-            font-size: 5rem; /* Tamaño grande para el icono */
-            color: #60a5fa; /* Azul claro */
+            font-size: 5rem;
+            color: #60a5fa;
             margin-bottom: 1rem;
-            min-height: 80px; /* Altura mínima para evitar saltos de layout */
+            min-height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         .icon-fallback-text {
-            font-size: 1.5rem; /* Tamaño más pequeño que el icono */
+            font-size: 1.5rem;
             font-weight: 600;
-            color: #9ca3af; /* Gris */
+            color: #9ca3af;
         }
 
         .option-button {
             transition: all 0.3s ease;
             border-radius: 0.5rem;
-            text-align: left;
+            text-align: left; /* Alinear a la izquierda para multi-línea */
             padding: 0.75rem 1rem;
+            position: relative; /* Necesario para posicionar el tooltip si se usa absolute */
+            overflow: hidden; /* Evitar que el tooltip se salga si se usa absolute */
+            min-height: 4.5rem; /* Altura mínima para acomodar dos líneas */
+            display: flex; /* Usar flexbox para alinear contenido */
+            flex-direction: column; /* Apilar inglés y español */
+            justify-content: center; /* Centrar verticalmente */
         }
         .option-button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
+        /* Estilo para el texto en inglés de la opción */
+        .option-en {
+            font-weight: 600;
+            display: block; /* Asegurar que ocupe su línea */
+        }
+        /* Estilo para el texto en español (tooltip en hover) */
+        .option-es-hover {
+            font-size: 0.85em;
+            color: #4b5563; /* Gris más oscuro para contraste */
+            display: none; /* Oculto por defecto */
+            margin-top: 0.2rem; /* Pequeño espacio superior */
+        }
+        /* Mostrar español al hacer hover sobre el botón */
+        .option-button:hover .option-es-hover {
+            display: block; /* Mostrar en hover */
+        }
+
         .correct {
             background-color: #dcfce7 !important;
             color: #166534 !important;
@@ -53,43 +76,42 @@
             color: #991b1b !important;
             border: 2px solid #fca5a5;
         }
-        /* Ya no se necesita .hinted ya que no hay botón de ayuda */
-        .audio-button {
+        .audio-button, .toggle-translation-button {
             background: none;
             border: none;
-            font-size: 1.5rem;
-            color: #3b82f6; /* Azul */
+            color: #3b82f6;
             cursor: pointer;
             transition: color 0.3s ease;
-            vertical-align: middle; /* Alinear con texto */
+            vertical-align: middle;
         }
-        .audio-button:hover {
-            color: #1d4ed8; /* Azul más oscuro */
+        .audio-button {
+             font-size: 1.5rem;
         }
-        /* Botón de audio específico para la pregunta */
-        .question-audio-button {
-            font-size: 1.2rem; /* Ligeramente más pequeño */
+        .audio-button:hover, .toggle-translation-button:hover {
+            color: #1d4ed8;
+        }
+        .question-audio-button, .feedback-audio-button, .toggle-translation-button {
+            font-size: 1.2rem;
             margin-left: 0.5rem;
         }
-        .feedback-audio-button {
-             font-size: 1.2rem;
-             margin-left: 0.5rem;
-        }
-        /* Se eliminaron los estilos .help-button */
         .translation {
             font-size: 0.9em;
-            color: #6b7280; /* Gris */
+            color: #6b7280;
             display: block;
+        }
+        .translation-hidden {
+            display: none;
         }
         .question-translation {
              margin-top: 0.25rem;
         }
-        .option-translation {
-             margin-top: 0.1rem;
-             font-size: 0.85em;
-        }
         .term-translation {
              margin-top: -0.25rem;
+        }
+        .feedback-translation {
+            font-size: 0.9em;
+            color: #4b5563;
+            font-style: italic;
         }
 
         @keyframes fadeIn {
@@ -105,13 +127,10 @@
     <div class="quiz-container w-full max-w-2xl p-6 md:p-8">
 
         <div id="start-screen" class="text-center fade-in">
-            <h1 class="text-3xl md:text-4xl font-bold text-blue-600 mb-4">¡Aprende sobre tu Cuerpo!</h1>
-            <p class="text-lg text-gray-700 mb-6">¡Prepárate para explorar los huesos, órganos y más en inglés y español!</p>
-            <div class="text-6xl text-blue-400 mb-8"> <i class="fas fa-child"></i> <i class="fas fa-heartbeat"></i> <i class="fas fa-brain"></i>
-            </div>
-            <button id="start-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xl transition duration-300 shadow-lg">
-                Empezar Juego
-            </button>
+             <h1 class="text-3xl md:text-4xl font-bold text-blue-600 mb-4">¡Aprende sobre tu Cuerpo!</h1>
+             <p class="text-lg text-gray-700 mb-6">¡Prepárate para explorar los huesos, órganos y más en inglés y español!</p>
+             <div class="text-6xl text-blue-400 mb-8"> <i class="fas fa-child"></i> <i class="fas fa-heartbeat"></i> <i class="fas fa-brain"></i></div>
+             <button id="start-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xl transition duration-300 shadow-lg">Empezar Juego</button>
         </div>
 
         <div id="game-screen" class="hidden">
@@ -120,38 +139,34 @@
                     <span class="hidden sm:inline">Pregunta:</span> <span id="current-question-number">1</span> / <span id="total-questions">0</span>
                     <span class="ml-4">Puntos: <span id="score">0</span></span>
                 </div>
-                </div>
+            </div>
 
-            <div id="question-icon-container">
-                </div>
+            <div id="question-icon-container"></div>
 
             <div class="text-center mb-4">
                 <div class="inline-flex items-center">
-                     <h2 id="term" class="text-2xl md:text-3xl font-bold text-blue-700 mr-3"></h2>
-                     <button id="term-audio-button" class="audio-button" title="Escuchar pronunciación del término">
-                         <i class="fas fa-volume-up"></i>
-                     </button>
+                     <h2 id="term" class="text-2xl md:text-3xl font-bold text-blue-700 mr-2"></h2>
+                     <button id="term-audio-button" class="audio-button" title="Escuchar pronunciación del término"><i class="fas fa-volume-up"></i></button>
+                     <button id="toggle-term-translation" class="toggle-translation-button" title="Ver en español"><i class="fas fa-eye"></i></button>
                 </div>
-                 <span id="term-translation" class="translation term-translation"></span>
+                 <span id="term-translation" class="translation term-translation translation-hidden"></span>
             </div>
 
             <div class="text-center text-lg md:text-xl text-gray-800 mb-6">
-                 <p id="question-text-en" class="font-semibold inline align-middle"></p>
-                 <button id="question-audio-button" class="audio-button question-audio-button inline align-middle" title="Escuchar pregunta en inglés">
-                     <i class="fas fa-volume-up"></i>
-                 </button>
-                 <p id="question-text-es" class="translation question-translation"></p>
+                 <span id="question-text-en" class="font-semibold inline align-middle"></span>
+                 <button id="question-audio-button" class="audio-button question-audio-button inline align-middle" title="Escuchar pregunta en inglés"><i class="fas fa-volume-up"></i></button>
+                 <button id="toggle-question-translation" class="toggle-translation-button" title="Ver en español"><i class="fas fa-eye"></i></button>
+                 <p id="question-text-es" class="translation question-translation translation-hidden"></p>
             </div>
 
-            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                </div>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"></div>
 
-            <div id="feedback-container" class="text-center mb-4 min-h-[2rem]">
-                 <span id="feedback-text" class="text-xl font-semibold inline align-middle"></span>
-                 <button id="feedback-audio-button" class="audio-button feedback-audio-button hidden align-middle" title="Escuchar respuesta correcta">
-                     <i class="fas fa-volume-up"></i>
-                 </button>
+            <div id="feedback-container" class="text-center mb-4 min-h-[4rem] p-2 bg-gray-50 rounded-lg"> <p id="feedback-result" class="text-xl font-semibold mb-1"></p> <div id="feedback-answer-container" class="hidden"> <span id="feedback-answer-en" class="font-bold"></span>
+                     <span id="feedback-answer-es" class="feedback-translation ml-1"></span>
+                     <button id="feedback-audio-button" class="audio-button feedback-audio-button inline align-middle" title="Escuchar respuesta correcta"><i class="fas fa-volume-up"></i></button>
+                 </div>
             </div>
+
             <div class="text-center">
                 <button id="next-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md hidden">
                     Siguiente Pregunta <i class="fas fa-arrow-right ml-2"></i>
@@ -161,21 +176,17 @@
 
         <div id="end-screen" class="text-center hidden">
             <h2 class="text-3xl md:text-4xl font-bold text-green-600 mb-4">¡Juego Terminado!</h2>
-             <div class="text-6xl text-yellow-400 mb-8"> <i class="fas fa-trophy"></i>
-             </div>
+             <div class="text-6xl text-yellow-400 mb-8"> <i class="fas fa-trophy"></i></div>
             <p class="text-xl text-gray-700 mb-6">Tu puntuación final es:</p>
             <p id="final-score" class="text-5xl font-bold text-blue-600 mb-8"></p>
-            <button id="restart-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xl transition duration-300 shadow-lg">
-                Jugar de Nuevo
-            </button>
+            <button id="restart-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xl transition duration-300 shadow-lg">Jugar de Nuevo</button>
         </div>
     </div>
 
     <script>
         // --- Datos del Juego ---
-        // (Se mantiene la misma estructura de datos que la v4)
         const questions = [
-            // Huesos (Bones)
+             // Huesos (Bones)
             { topic: "Bones", fa_icon: "fas fa-brain", term: "Skull", term_translation: "Cráneo", question_en: "What is the main job of the Skull?", question_es: "¿Cuál es la función principal del Cráneo?", options: [ { en: "Protect the brain", es: "Proteger el cerebro" }, { en: "Help you breathe", es: "Ayudarte a respirar" }, { en: "Pump blood", es: "Bombear sangre" }, { en: "Digest food", es: "Digerir comida" } ], answer_en: "Protect the brain", pronunciation_term: "Skull" },
             { topic: "Bones", fa_icon: "fas fa-lungs", term: "Ribs", term_translation: "Costillas", question_en: "What do the Ribs protect?", question_es: "¿Qué protegen las Costillas?", options: [ { en: "Heart and lungs", es: "Corazón y pulmones" }, { en: "Your legs", es: "Tus piernas" }, { en: "Your brain", es: "Tu cerebro" }, { en: "Your feet", es: "Tus pies" } ], answer_en: "Heart and lungs", pronunciation_term: "Ribs" },
             { topic: "Bones", fa_icon: "fas fa-bone", term: "Spinal Column", term_translation: "Columna Vertebral", question_en: "What does the Spinal Column help you do?", question_es: "¿Qué te ayuda a hacer la Columna Vertebral?", options: [ { en: "Stand up straight", es: "Mantenerte derecho" }, { en: "Taste food", es: "Saborear comida" }, { en: "See colors", es: "Ver colores" }, { en: "Hear sounds", es: "Oír sonidos" } ], answer_en: "Stand up straight", pronunciation_term: "Spinal Column" },
@@ -201,6 +212,7 @@
             { topic: "Physical Activity", fa_icon: "fas fa-running", term: "Activity", term_translation: "Actividad", question_en: "Which of these is good physical activity?", question_es: "¿Cuál de estas es buena actividad física?", options: [ { en: "Playing tag", es: "Jugar a la pinta (las traes)" }, { en: "Watching TV all day", es: "Ver tele todo el día" }, { en: "Sleeping", es: "Dormir" }, { en: "Eating candy", es: "Comer dulces" } ], answer_en: "Playing tag", pronunciation_term: "Activity" }
         ];
 
+
         // --- Elementos del DOM ---
         const startScreen = document.getElementById('start-screen');
         const gameScreen = document.getElementById('game-screen');
@@ -211,16 +223,20 @@
         const questionIconContainer = document.getElementById('question-icon-container');
         const termElement = document.getElementById('term');
         const termTranslationElement = document.getElementById('term-translation');
-        const termAudioButton = document.getElementById('term-audio-button'); // Renombrado de audio-button
+        const termAudioButton = document.getElementById('term-audio-button');
+        const toggleTermTranslationButton = document.getElementById('toggle-term-translation');
         const questionTextEn = document.getElementById('question-text-en');
-        const questionAudioButton = document.getElementById('question-audio-button'); // Nuevo botón
+        const questionAudioButton = document.getElementById('question-audio-button');
+        const toggleQuestionTranslationButton = document.getElementById('toggle-question-translation');
         const questionTextEs = document.getElementById('question-text-es');
         const optionsContainer = document.getElementById('options-container');
         const feedbackContainer = document.getElementById('feedback-container');
-        const feedbackText = document.getElementById('feedback-text');
+        const feedbackResult = document.getElementById('feedback-result');
+        const feedbackAnswerContainer = document.getElementById('feedback-answer-container');
+        const feedbackAnswerEn = document.getElementById('feedback-answer-en');
+        const feedbackAnswerEs = document.getElementById('feedback-answer-es');
         const feedbackAudioButton = document.getElementById('feedback-audio-button');
         const nextButton = document.getElementById('next-button');
-        // helpButton eliminado
 
         const scoreElement = document.getElementById('score');
         const currentQuestionNumberElement = document.getElementById('current-question-number');
@@ -231,9 +247,8 @@
         let currentQuestionIndex = 0;
         let score = 0;
         let shuffledQuestions = [];
-        // helpUsed eliminado
         let currentCorrectAnswerTextEn = '';
-        let currentQuestionTextEn = ''; // Para guardar texto EN de la pregunta para audio
+        let currentQuestionTextEn = '';
 
         // --- Funciones del Juego ---
 
@@ -259,16 +274,20 @@
         }
 
         function loadQuestion() {
-            // helpUsed eliminado
-            feedbackText.textContent = '';
-            feedbackText.className = 'text-xl font-semibold inline align-middle';
-            feedbackAudioButton.classList.add('hidden');
+            feedbackResult.textContent = '';
+            feedbackResult.className = 'text-xl font-semibold mb-1';
+            feedbackAnswerContainer.classList.add('hidden');
             nextButton.classList.add('hidden');
             optionsContainer.innerHTML = '';
 
+            termTranslationElement.classList.add('translation-hidden');
+            questionTextEs.classList.add('translation-hidden');
+            toggleTermTranslationButton.innerHTML = '<i class="fas fa-eye"></i>';
+            toggleQuestionTranslationButton.innerHTML = '<i class="fas fa-eye"></i>';
+
             const currentQuestion = shuffledQuestions[currentQuestionIndex];
             currentCorrectAnswerTextEn = currentQuestion.answer_en;
-            currentQuestionTextEn = currentQuestion.question_en; // Guardar pregunta EN para audio
+            currentQuestionTextEn = currentQuestion.question_en;
 
             currentQuestionNumberElement.textContent = currentQuestionIndex + 1;
 
@@ -282,45 +301,45 @@
 
             termElement.textContent = currentQuestion.term;
             termTranslationElement.textContent = currentQuestion.term_translation;
-            questionTextEn.textContent = currentQuestion.question_en; // Mostrar pregunta EN
+            questionTextEn.textContent = currentQuestion.question_en;
             questionTextEs.textContent = currentQuestion.question_es;
 
             const options = shuffleArray([...currentQuestion.options]);
             options.forEach(option => {
                 const button = document.createElement('button');
+                // Estructura del botón con span para EN y ES (ES oculto por CSS)
                 button.innerHTML = `
-                    <span class="font-medium">${option.en}</span>
-                    <span class="translation option-translation">${option.es}</span>
+                    <span class="option-en">${option.en}</span>
+                    <span class="option-es-hover">${option.es}</span>
                 `;
-                button.classList.add('option-button', 'w-full', 'bg-white', 'text-blue-600', 'font-semibold', 'py-3', 'px-4', 'border', 'border-blue-300', 'hover:bg-blue-100');
+                button.classList.add('option-button', 'w-full', 'bg-white', 'text-blue-600', 'border', 'border-blue-300', 'hover:bg-blue-100');
                 button.dataset.en = option.en;
                 button.addEventListener('click', () => selectAnswer(button, option.en, currentQuestion.answer_en));
                 optionsContainer.appendChild(button);
             });
-
-            // Botón de ayuda ya no existe, no se habilita nada aquí
         }
 
         function selectAnswer(button, selectedOptionEn, correctAnswerEn) {
             const optionButtons = optionsContainer.querySelectorAll('button');
             optionButtons.forEach(btn => btn.disabled = true);
-            // helpButton ya no existe
 
-            feedbackAudioButton.classList.remove('hidden');
+            const correctAnswerObject = shuffledQuestions[currentQuestionIndex].options.find(opt => opt.en === correctAnswerEn);
+            const correctAnswerEs = correctAnswerObject?.es || '';
+
+            feedbackAnswerEn.textContent = correctAnswerEn;
+            feedbackAnswerEs.textContent = `(${correctAnswerEs})`;
+            feedbackAnswerContainer.classList.remove('hidden');
 
             if (selectedOptionEn === correctAnswerEn) {
                 button.classList.add('correct');
-                feedbackText.textContent = '¡Correcto! 🎉';
-                feedbackText.classList.add('text-green-600');
-                // helpUsed ya no existe, se suma punto directamente
+                feedbackResult.textContent = '¡Correcto! 🎉';
+                feedbackResult.classList.add('text-green-600');
                 score++;
                 scoreElement.textContent = score;
-
             } else {
                 button.classList.add('incorrect');
-                const correctAnswerObject = shuffledQuestions[currentQuestionIndex].options.find(opt => opt.en === correctAnswerEn);
-                feedbackText.innerHTML = `Incorrecto. Era: <br class="sm:hidden"> <span class="font-bold">${correctAnswerEn}</span> <span class="translation">(${correctAnswerObject?.es || ''})</span>`;
-                feedbackText.classList.add('text-red-600');
+                feedbackResult.textContent = 'Incorrecto. La respuesta correcta es:';
+                feedbackResult.classList.add('text-red-600');
                 optionButtons.forEach(btn => {
                     if (btn.dataset.en === correctAnswerEn) {
                         btn.classList.add('correct');
@@ -361,32 +380,34 @@
             }
         }
 
-        // Reproduce el audio del TÉRMINO principal
         function playCurrentTermAudio() {
             const termToSpeak = shuffledQuestions[currentQuestionIndex].pronunciation_term;
             playSpecificAudio(termToSpeak);
         }
 
-        // Reproduce el audio de la PREGUNTA en inglés
         function playCurrentQuestionAudio() {
-            playSpecificAudio(currentQuestionTextEn); // Usa el texto EN de la pregunta guardado
+            playSpecificAudio(currentQuestionTextEn);
         }
 
-        // Reproduce el audio de la RESPUESTA CORRECTA en inglés
         function playCorrectAnswerAudio() {
             playSpecificAudio(currentCorrectAnswerTextEn);
         }
 
-        // Función provideHelp eliminada
+        function toggleTranslation(element, button) {
+            const isHidden = element.classList.toggle('translation-hidden');
+            button.innerHTML = isHidden ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+            button.title = isHidden ? 'Ver en español' : 'Ocultar español';
+        }
 
         // --- Event Listeners ---
         startButton.addEventListener('click', startGame);
         nextButton.addEventListener('click', nextQuestion);
         restartButton.addEventListener('click', startGame);
-        termAudioButton.addEventListener('click', playCurrentTermAudio); // Botón para el término
-        questionAudioButton.addEventListener('click', playCurrentQuestionAudio); // Nuevo listener para la pregunta
-        feedbackAudioButton.addEventListener('click', playCorrectAnswerAudio); // Botón para la respuesta correcta
-        // Listener de helpButton eliminado
+        termAudioButton.addEventListener('click', playCurrentTermAudio);
+        questionAudioButton.addEventListener('click', playCurrentQuestionAudio);
+        feedbackAudioButton.addEventListener('click', playCorrectAnswerAudio);
+        toggleTermTranslationButton.addEventListener('click', () => toggleTranslation(termTranslationElement, toggleTermTranslationButton));
+        toggleQuestionTranslationButton.addEventListener('click', () => toggleTranslation(questionTextEs, toggleQuestionTranslationButton));
 
     </script>
 </body>
