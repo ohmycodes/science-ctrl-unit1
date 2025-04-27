@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego Interactivo: El Cuerpo Humano</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        /* Estilos adicionales */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff; /* Azul cielo muy claro */
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden; /* Asegura bordes redondeados consistentes */
+        }
+        #question-icon-container {
+            font-size: 5rem; /* Tamaño grande para el icono */
+            color: #60a5fa; /* Azul claro */
+            margin-bottom: 1rem;
+            min-height: 80px; /* Altura mínima para evitar saltos de layout */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-fallback-text {
+            font-size: 1.5rem; /* Tamaño más pequeño que el icono */
+            font-weight: 600;
+            color: #9ca3af; /* Gris */
+        }
+
+        .option-button {
+            transition: all 0.3s ease;
+            border-radius: 0.5rem;
+            text-align: left;
+            padding: 0.75rem 1rem;
+        }
+        .option-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .correct {
+            background-color: #dcfce7 !important;
+            color: #166534 !important;
+            border: 2px solid #86efac;
+        }
+        .incorrect {
+            background-color: #fee2e2 !important;
+            color: #991b1b !important;
+            border: 2px solid #fca5a5;
+        }
+        /* Ya no se necesita .hinted ya que no hay botón de ayuda */
+        .audio-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #3b82f6; /* Azul */
+            cursor: pointer;
+            transition: color 0.3s ease;
+            vertical-align: middle; /* Alinear con texto */
+        }
+        .audio-button:hover {
+            color: #1d4ed8; /* Azul más oscuro */
+        }
+        /* Botón de audio específico para la pregunta */
+        .question-audio-button {
+            font-size: 1.2rem; /* Ligeramente más pequeño */
+            margin-left: 0.5rem;
+        }
+        .feedback-audio-button {
+             font-size: 1.2rem;
+             margin-left: 0.5rem;
+        }
+        /* Se eliminaron los estilos .help-button */
+        .translation {
+            font-size: 0.9em;
+            color: #6b7280; /* Gris */
+            display: block;
+        }
+        .question-translation {
+             margin-top: 0.25rem;
+        }
+        .option-translation {
+             margin-top: 0.1rem;
+             font-size: 0.85em;
+        }
+        .term-translation {
+             margin-top: -0.25rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="quiz-container w-full max-w-2xl p-6 md:p-8">
+
+        <div id="start-screen" class="text-center fade-in">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-600 mb-4">¡Aprende sobre tu Cuerpo!</h1>
+            <p class="text-lg text-gray-700 mb-6">¡Prepárate para explorar los huesos, órganos y más en inglés y español!</p>
+            <div class="text-6xl text-blue-400 mb-8"> <i class="fas fa-child"></i> <i class="fas fa-heartbeat"></i> <i class="fas fa-brain"></i>
+            </div>
+            <button id="start-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xl transition duration-300 shadow-lg">
+                Empezar Juego
+            </button>
+        </div>
+
+        <div id="game-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-lg font-semibold text-gray-700">
+                    <span class="hidden sm:inline">Pregunta:</span> <span id="current-question-number">1</span> / <span id="total-questions">0</span>
+                    <span class="ml-4">Puntos: <span id="score">0</span></span>
+                </div>
+                </div>
+
+            <div id="question-icon-container">
+                </div>
+
+            <div class="text-center mb-4">
+                <div class="inline-flex items-center">
+                     <h2 id="term" class="text-2xl md:text-3xl font-bold text-blue-700 mr-3"></h2>
+                     <button id="term-audio-button" class="audio-button" title="Escuchar pronunciación del término">
+                         <i class="fas fa-volume-up"></i>
+                     </button>
+                </div>
+                 <span id="term-translation" class="translation term-translation"></span>
+            </div>
+
+            <div class="text-center text-lg md:text-xl text-gray-800 mb-6">
+                 <p id="question-text-en" class="font-semibold inline align-middle"></p>
+                 <button id="question-audio-button" class="audio-button question-audio-button inline align-middle" title="Escuchar pregunta en inglés">
+                     <i class="fas fa-volume-up"></i>
+                 </button>
+                 <p id="question-text-es" class="translation question-translation"></p>
+            </div>
+
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                </div>
+
+            <div id="feedback-container" class="text-center mb-4 min-h-[2rem]">
+                 <span id="feedback-text" class="text-xl font-semibold inline align-middle"></span>
+                 <button id="feedback-audio-button" class="audio-button feedback-audio-button hidden align-middle" title="Escuchar respuesta correcta">
+                     <i class="fas fa-volume-up"></i>
+                 </button>
+            </div>
+            <div class="text-center">
+                <button id="next-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md hidden">
+                    Siguiente Pregunta <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="end-screen" class="text-center hidden">
+            <h2 class="text-3xl md:text-4xl font-bold text-green-600 mb-4">¡Juego Terminado!</h2>
+             <div class="text-6xl text-yellow-400 mb-8"> <i class="fas fa-trophy"></i>
+             </div>
+            <p class="text-xl text-gray-700 mb-6">Tu puntuación final es:</p>
+            <p id="final-score" class="text-5xl font-bold text-blue-600 mb-8"></p>
+            <button id="restart-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xl transition duration-300 shadow-lg">
+                Jugar de Nuevo
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Datos del Juego ---
+        // (Se mantiene la misma estructura de datos que la v4)
+        const questions = [
+            // Huesos (Bones)
+            { topic: "Bones", fa_icon: "fas fa-brain", term: "Skull", term_translation: "Cráneo", question_en: "What is the main job of the Skull?", question_es: "¿Cuál es la función principal del Cráneo?", options: [ { en: "Protect the brain", es: "Proteger el cerebro" }, { en: "Help you breathe", es: "Ayudarte a respirar" }, { en: "Pump blood", es: "Bombear sangre" }, { en: "Digest food", es: "Digerir comida" } ], answer_en: "Protect the brain", pronunciation_term: "Skull" },
+            { topic: "Bones", fa_icon: "fas fa-lungs", term: "Ribs", term_translation: "Costillas", question_en: "What do the Ribs protect?", question_es: "¿Qué protegen las Costillas?", options: [ { en: "Heart and lungs", es: "Corazón y pulmones" }, { en: "Your legs", es: "Tus piernas" }, { en: "Your brain", es: "Tu cerebro" }, { en: "Your feet", es: "Tus pies" } ], answer_en: "Heart and lungs", pronunciation_term: "Ribs" },
+            { topic: "Bones", fa_icon: "fas fa-bone", term: "Spinal Column", term_translation: "Columna Vertebral", question_en: "What does the Spinal Column help you do?", question_es: "¿Qué te ayuda a hacer la Columna Vertebral?", options: [ { en: "Stand up straight", es: "Mantenerte derecho" }, { en: "Taste food", es: "Saborear comida" }, { en: "See colors", es: "Ver colores" }, { en: "Hear sounds", es: "Oír sonidos" } ], answer_en: "Stand up straight", pronunciation_term: "Spinal Column" },
+            { topic: "Bones", fa_icon: "fas fa-bone", term: "Bones", term_translation: "Huesos", question_en: "What gives your body its shape?", question_es: "¿Qué le da forma a tu cuerpo?", options: [ { en: "Your bones", es: "Tus huesos" }, { en: "Your muscles", es: "Tus músculos" }, { en: "Your skin", es: "Tu piel" }, { en: "Your hair", es: "Tu pelo" } ], answer_en: "Your bones", pronunciation_term: "Bones" },
+            { topic: "Bones", fa_icon: "fas fa-tint", term: "Bones", term_translation: "Huesos", question_en: "What important thing is made inside some bones?", question_es: "¿Qué cosa importante se fabrica dentro de algunos huesos?", options: [ { en: "Blood cells", es: "Células sanguíneas" }, { en: "Thoughts", es: "Pensamientos" }, { en: "Air", es: "Aire" }, { en: "Food energy", es: "Energía de la comida" } ], answer_en: "Blood cells", pronunciation_term: "Bones" },
+            // Órganos (Organs)
+            { topic: "Organs", fa_icon: "fas fa-heartbeat", term: "Heart", term_translation: "Corazón", question_en: "What does the Heart do?", question_es: "¿Qué hace el Corazón?", options: [ { en: "Pumps blood", es: "Bombea sangre" }, { en: "Helps you think", es: "Te ayuda a pensar" }, { en: "Breaks down food", es: "Descompone la comida" }, { en: "Protects your bones", es: "Protege tus huesos" } ], answer_en: "Pumps blood", pronunciation_term: "Heart" },
+            { topic: "Organs", fa_icon: "fas fa-lungs", term: "Lungs", term_translation: "Pulmones", question_en: "What do your Lungs help you do?", question_es: "¿Qué te ayudan a hacer tus Pulmones?", options: [ { en: "Breathe air", es: "Respirar aire" }, { en: "Jump high", es: "Saltar alto" }, { en: "See far away", es: "Ver de lejos" }, { en: "Digest pizza", es: "Digerir pizza" } ], answer_en: "Breathe air", pronunciation_term: "Lungs" },
+            { topic: "Organs", fa_icon: null, term: "Stomach", term_translation: "Estómago", question_en: "What happens to food in your Stomach?", question_es: "¿Qué le pasa a la comida en tu Estómago?", options: [ { en: "It gets mixed and broken down", es: "Se mezcla y descompone" }, { en: "It turns into air", es: "Se convierte en aire" }, { en: "It becomes blood", es: "Se vuelve sangre" }, { en: "It helps you sleep", es: "Te ayuda a dormir" } ], answer_en: "It gets mixed and broken down", pronunciation_term: "Stomach" },
+            { topic: "Organs", fa_icon: "fas fa-brain", term: "Brain", term_translation: "Cerebro", question_en: "Which organ controls your thoughts and movements?", question_es: "¿Qué órgano controla tus pensamientos y movimientos?", options: [ { en: "Brain", es: "Cerebro" }, { en: "Heart", es: "Corazón" }, { en: "Stomach", es: "Estómago" }, { en: "Lungs", es: "Pulmones" } ], answer_en: "Brain", pronunciation_term: "Brain" },
+            { topic: "Organs", fa_icon: "fas fa-brain", term: "Brain", term_translation: "Cerebro", question_en: "What is the 'control center' of your body?", question_es: "¿Cuál es el 'centro de control' de tu cuerpo?", options: [ { en: "Brain", es: "Cerebro" }, { en: "Skin", es: "Piel" }, { en: "Feet", es: "Pies" }, { en: "Hair", es: "Pelo" } ], answer_en: "Brain", pronunciation_term: "Brain" },
+            // Articulaciones (Joints)
+            { topic: "Joints", fa_icon: "fas fa-link", term: "Joints", term_translation: "Articulaciones", question_en: "What do Joints help you do?", question_es: "¿Qué te ayudan a hacer las Articulaciones?", options: [ { en: "Bend and move", es: "Doblarte y moverte" }, { en: "Think and learn", es: "Pensar y aprender" }, { en: "Breathe air", es: "Respirar aire" }, { en: "Digest food", es: "Digerir comida" } ], answer_en: "Bend and move", pronunciation_term: "Joints" },
+            { topic: "Joints", fa_icon: "fas fa-link", term: "Elbow", term_translation: "Codo", question_en: "Where is your Elbow joint?", question_es: "¿Dónde está la articulación de tu Codo?", options: [ { en: "In your arm", es: "En tu brazo" }, { en: "In your leg", es: "En tu pierna" }, { en: "In your head", es: "En tu cabeza" }, { en: "In your foot", es: "En tu pie" } ], answer_en: "In your arm", pronunciation_term: "Elbow" },
+            { topic: "Joints", fa_icon: "fas fa-link", term: "Shoulder", term_translation: "Hombro", question_en: "Which joint lets you swing your arm around?", question_es: "¿Qué articulación te permite girar el brazo?", options: [ { en: "Shoulder", es: "Hombro" }, { en: "Knee", es: "Rodilla" }, { en: "Ankle", es: "Tobillo" }, { en: "Wrist", es: "Muñeca" } ], answer_en: "Shoulder", pronunciation_term: "Shoulder" },
+            { topic: "Joints", fa_icon: "fas fa-link", term: "Joints", term_translation: "Articulaciones", question_en: "What is a joint?", question_es: "¿Qué es una articulación?", options: [ { en: "Where two bones meet", es: "Donde se unen dos huesos" }, { en: "A type of muscle", es: "Un tipo de músculo" }, { en: "A part of the brain", es: "Una parte del cerebro" }, { en: "Something you eat", es: "Algo que comes" } ], answer_en: "Where two bones meet", pronunciation_term: "Joints" },
+            { topic: "Joints", fa_icon: "fas fa-link", term: "Joints", term_translation: "Articulaciones", question_en: "Without joints, you wouldn't be able to...", question_es: "Sin articulaciones, no podrías...", options: [ { en: "Move easily", es: "Moverte fácilmente" }, { en: "Breathe", es: "Respirar" }, { en: "Think", es: "Pensar" }, { en: "See", es: "Ver" } ], answer_en: "Move easily", pronunciation_term: "Joints" },
+            // Actividad Física (Physical Activity)
+            { topic: "Physical Activity", fa_icon: "fas fa-running", term: "Physical Activity", term_translation: "Actividad Física", question_en: "Why is playing and moving important?", question_es: "¿Por qué es importante jugar y moverse?", options: [ { en: "Keeps your body strong and healthy", es: "Mantiene tu cuerpo fuerte y sano" }, { en: "Makes you tired all the time", es: "Te cansa todo el tiempo" }, { en: "Is boring", es: "Es aburrido" }, { en: "Only for adults", es: "Solo para adultos" } ], answer_en: "Keeps your body strong and healthy", pronunciation_term: "Physical Activity" },
+            { topic: "Physical Activity", fa_icon: "fas fa-heartbeat", term: "Healthy Heart", term_translation: "Corazón Saludable", question_en: "What does exercise do for your heart?", question_es: "¿Qué hace el ejercicio por tu corazón?", options: [ { en: "Makes it stronger", es: "Lo hace más fuerte" }, { en: "Makes it smaller", es: "Lo hace más pequeño" }, { en: "Makes it stop", es: "Hace que se detenga" }, { en: "Makes it blue", es: "Lo pone azul" } ], answer_en: "Makes it stronger", pronunciation_term: "Healthy Heart" },
+            { topic: "Physical Activity", fa_icon: "fas fa-bone", term: "Strong Bones", term_translation: "Huesos Fuertes", question_en: "How does running and jumping help your bones?", question_es: "¿Cómo ayuda a tus huesos correr y saltar?", options: [ { en: "Makes them stronger", es: "Los hace más fuertes" }, { en: "Makes them softer", es: "Los hace más blandos" }, { en: "Makes them disappear", es: "Los hace desaparecer" }, { en: "Changes their color", es: "Cambia su color" } ], answer_en: "Makes them stronger", pronunciation_term: "Strong Bones" },
+            { topic: "Physical Activity", fa_icon: "fas fa-smile", term: "Feeling Good", term_translation: "Sentirse Bien", question_en: "How can exercise make you feel?", question_es: "¿Cómo te puede hacer sentir el ejercicio?", options: [ { en: "Happy and energetic", es: "Feliz y con energía" }, { en: "Sad and tired", es: "Triste y cansado" }, { en: "Angry", es: "Enojado" }, { en: "Hungry for rocks", es: "Hambriento de rocas" } ], answer_en: "Happy and energetic", pronunciation_term: "Feeling Good" },
+            { topic: "Physical Activity", fa_icon: "fas fa-running", term: "Activity", term_translation: "Actividad", question_en: "Which of these is good physical activity?", question_es: "¿Cuál de estas es buena actividad física?", options: [ { en: "Playing tag", es: "Jugar a la pinta (las traes)" }, { en: "Watching TV all day", es: "Ver tele todo el día" }, { en: "Sleeping", es: "Dormir" }, { en: "Eating candy", es: "Comer dulces" } ], answer_en: "Playing tag", pronunciation_term: "Activity" }
+        ];
+
+        // --- Elementos del DOM ---
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+
+        const questionIconContainer = document.getElementById('question-icon-container');
+        const termElement = document.getElementById('term');
+        const termTranslationElement = document.getElementById('term-translation');
+        const termAudioButton = document.getElementById('term-audio-button'); // Renombrado de audio-button
+        const questionTextEn = document.getElementById('question-text-en');
+        const questionAudioButton = document.getElementById('question-audio-button'); // Nuevo botón
+        const questionTextEs = document.getElementById('question-text-es');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackContainer = document.getElementById('feedback-container');
+        const feedbackText = document.getElementById('feedback-text');
+        const feedbackAudioButton = document.getElementById('feedback-audio-button');
+        const nextButton = document.getElementById('next-button');
+        // helpButton eliminado
+
+        const scoreElement = document.getElementById('score');
+        const currentQuestionNumberElement = document.getElementById('current-question-number');
+        const totalQuestionsElement = document.getElementById('total-questions');
+        const finalScoreElement = document.getElementById('final-score');
+
+        // --- Estado del Juego ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+        // helpUsed eliminado
+        let currentCorrectAnswerTextEn = '';
+        let currentQuestionTextEn = ''; // Para guardar texto EN de la pregunta para audio
+
+        // --- Funciones del Juego ---
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startGame() {
+            shuffledQuestions = shuffleArray([...questions]);
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreElement.textContent = score;
+            totalQuestionsElement.textContent = shuffledQuestions.length;
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            gameScreen.classList.add('fade-in');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            // helpUsed eliminado
+            feedbackText.textContent = '';
+            feedbackText.className = 'text-xl font-semibold inline align-middle';
+            feedbackAudioButton.classList.add('hidden');
+            nextButton.classList.add('hidden');
+            optionsContainer.innerHTML = '';
+
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            currentCorrectAnswerTextEn = currentQuestion.answer_en;
+            currentQuestionTextEn = currentQuestion.question_en; // Guardar pregunta EN para audio
+
+            currentQuestionNumberElement.textContent = currentQuestionIndex + 1;
+
+            if (currentQuestion.fa_icon) {
+                questionIconContainer.innerHTML = `<i class="${currentQuestion.fa_icon}"></i>`;
+                questionIconContainer.classList.remove('icon-fallback-text');
+            } else {
+                questionIconContainer.innerHTML = currentQuestion.term;
+                questionIconContainer.classList.add('icon-fallback-text');
+            }
+
+            termElement.textContent = currentQuestion.term;
+            termTranslationElement.textContent = currentQuestion.term_translation;
+            questionTextEn.textContent = currentQuestion.question_en; // Mostrar pregunta EN
+            questionTextEs.textContent = currentQuestion.question_es;
+
+            const options = shuffleArray([...currentQuestion.options]);
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerHTML = `
+                    <span class="font-medium">${option.en}</span>
+                    <span class="translation option-translation">${option.es}</span>
+                `;
+                button.classList.add('option-button', 'w-full', 'bg-white', 'text-blue-600', 'font-semibold', 'py-3', 'px-4', 'border', 'border-blue-300', 'hover:bg-blue-100');
+                button.dataset.en = option.en;
+                button.addEventListener('click', () => selectAnswer(button, option.en, currentQuestion.answer_en));
+                optionsContainer.appendChild(button);
+            });
+
+            // Botón de ayuda ya no existe, no se habilita nada aquí
+        }
+
+        function selectAnswer(button, selectedOptionEn, correctAnswerEn) {
+            const optionButtons = optionsContainer.querySelectorAll('button');
+            optionButtons.forEach(btn => btn.disabled = true);
+            // helpButton ya no existe
+
+            feedbackAudioButton.classList.remove('hidden');
+
+            if (selectedOptionEn === correctAnswerEn) {
+                button.classList.add('correct');
+                feedbackText.textContent = '¡Correcto! 🎉';
+                feedbackText.classList.add('text-green-600');
+                // helpUsed ya no existe, se suma punto directamente
+                score++;
+                scoreElement.textContent = score;
+
+            } else {
+                button.classList.add('incorrect');
+                const correctAnswerObject = shuffledQuestions[currentQuestionIndex].options.find(opt => opt.en === correctAnswerEn);
+                feedbackText.innerHTML = `Incorrecto. Era: <br class="sm:hidden"> <span class="font-bold">${correctAnswerEn}</span> <span class="translation">(${correctAnswerObject?.es || ''})</span>`;
+                feedbackText.classList.add('text-red-600');
+                optionButtons.forEach(btn => {
+                    if (btn.dataset.en === correctAnswerEn) {
+                        btn.classList.add('correct');
+                        btn.classList.remove('bg-white', 'hover:bg-blue-100');
+                    }
+                });
+            }
+
+            nextButton.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            endScreen.classList.add('fade-in');
+            finalScoreElement.textContent = `${score} / ${shuffledQuestions.length}`;
+        }
+
+        function playSpecificAudio(term) {
+             if ('speechSynthesis' in window && term) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(term);
+                utterance.lang = 'en-US';
+                utterance.pitch = 1;
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            } else if (!('speechSynthesis' in window)) {
+                 alert('Tu navegador no soporta la síntesis de voz.');
+            }
+        }
+
+        // Reproduce el audio del TÉRMINO principal
+        function playCurrentTermAudio() {
+            const termToSpeak = shuffledQuestions[currentQuestionIndex].pronunciation_term;
+            playSpecificAudio(termToSpeak);
+        }
+
+        // Reproduce el audio de la PREGUNTA en inglés
+        function playCurrentQuestionAudio() {
+            playSpecificAudio(currentQuestionTextEn); // Usa el texto EN de la pregunta guardado
+        }
+
+        // Reproduce el audio de la RESPUESTA CORRECTA en inglés
+        function playCorrectAnswerAudio() {
+            playSpecificAudio(currentCorrectAnswerTextEn);
+        }
+
+        // Función provideHelp eliminada
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startGame);
+        nextButton.addEventListener('click', nextQuestion);
+        restartButton.addEventListener('click', startGame);
+        termAudioButton.addEventListener('click', playCurrentTermAudio); // Botón para el término
+        questionAudioButton.addEventListener('click', playCurrentQuestionAudio); // Nuevo listener para la pregunta
+        feedbackAudioButton.addEventListener('click', playCorrectAnswerAudio); // Botón para la respuesta correcta
+        // Listener de helpButton eliminado
+
+    </script>
+</body>
+</html>
